@@ -1,6 +1,14 @@
 {
   "toolset": "data_collection_search",
   "description": "数据收集项目检索相关能力，支持搜索、筛选和统计。",
+  "execution": {
+    "mode": "http",
+    "client": ["curl", "python-requests"],
+    "not_via": "mcp",
+    "config_file": "api-config.json",
+    "default_base_url": "https://jujidata.com",
+    "auth_header": "Authorization: Bearer <api_key>"
+  },
   "tools": [
     {
       "name": "search_collected_records",
@@ -17,6 +25,10 @@
       "api": {
         "method": "POST",
         "url": "/api/projects/{project_id}/search"
+      },
+      "examples": {
+        "curl": "curl -sS -X POST \"${BASE_URL}/api/projects/${PROJECT_ID}/search\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\" -d '{\"filters\": {\"region\": \"东区\"}, \"limit\": 50}'",
+        "python_requests": "requests.post(f\"{base_url}/api/projects/{project_id}/search\", json={\"filters\": filters, \"limit\": limit}, headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
       }
     },
     {
@@ -33,6 +45,10 @@
       "api": {
         "method": "POST",
         "url": "/api/projects/{project_id}/summary"
+      },
+      "examples": {
+        "curl": "curl -sS -X POST \"${BASE_URL}/api/projects/${PROJECT_ID}/summary\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\" -d '{\"group_by\": [\"status\", \"region\"]}'",
+        "python_requests": "requests.post(f\"{base_url}/api/projects/{project_id}/summary\", json={\"group_by\": group_by}, headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
       }
     }
   ]

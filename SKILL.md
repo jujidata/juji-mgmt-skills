@@ -13,6 +13,7 @@
 - `tools/`：工具定义，说明可调用的 API 和能力。
 - `scripts/`：脚本示例，用于生成图表和摘要结果。
 - `manifest.yaml`：技能清单与元数据。
+- `api-config.example.json`：API 配置参考文件（复制为 `api-config.json` 使用）。
 
 ## 典型工作流
 
@@ -24,3 +25,5 @@
 ## 说明
 
 本技能是占位模板，目的是为后续扩展真实业务能力提供统一结构。后续可以在此基础上补充真实 API、数据库查询和分析脚本。 
+
+使用前请先按 `instructions/api_config.md` 正确配置 `api-config.json`。`tools/` 下的调用统一走 **curl** 或 **Python requests**，不走 MCP。
