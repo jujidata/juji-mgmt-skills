@@ -1,6 +1,14 @@
 {
   "toolset": "enterprise_user_management",
   "description": "企业用户管理相关能力，适合查询和维护企业成员信息。",
+  "execution": {
+    "mode": "http",
+    "client": ["curl", "python-requests"],
+    "not_via": "mcp",
+    "config_file": "api-config.json",
+    "default_base_url": "https://jujidata.com",
+    "auth_header": "Authorization: Bearer <api_key>"
+  },
   "tools": [
     {
       "name": "list_enterprise_users",
@@ -18,6 +26,10 @@
       "api": {
         "method": "GET",
         "url": "/api/enterprise/{enterprise_id}/users"
+      },
+      "examples": {
+        "curl": "curl -sS -X GET \"${BASE_URL}/api/enterprise/${ENTERPRISE_ID}/users?status=${STATUS}&page=${PAGE}&page_size=${PAGE_SIZE}\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/enterprise/{enterprise_id}/users\", params={\"status\": status, \"page\": page, \"page_size\": page_size}, headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
       }
     },
     {
@@ -34,6 +46,10 @@
       "api": {
         "method": "GET",
         "url": "/api/enterprise/{enterprise_id}/users/{user_id}"
+      },
+      "examples": {
+        "curl": "curl -sS -X GET \"${BASE_URL}/api/enterprise/${ENTERPRISE_ID}/users/${USER_ID}\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/enterprise/{enterprise_id}/users/{user_id}\", headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
       }
     }
   ]

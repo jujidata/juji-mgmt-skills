@@ -13,6 +13,7 @@ tags:
 entrypoints:
   - SKILL.md
   - README.md
+  - api-config.example.json
   - instructions/
   - tools/
   - scripts/

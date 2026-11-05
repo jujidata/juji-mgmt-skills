@@ -1,6 +1,14 @@
 {
   "toolset": "project_progress_management",
   "description": "项目进度管理相关能力，用于读取进度和总结事项。",
+  "execution": {
+    "mode": "http",
+    "client": ["curl", "python-requests"],
+    "not_via": "mcp",
+    "config_file": "api-config.json",
+    "default_base_url": "https://jujidata.com",
+    "auth_header": "Authorization: Bearer <api_key>"
+  },
   "tools": [
     {
       "name": "get_project_summary",
@@ -16,6 +24,10 @@
       "api": {
         "method": "GET",
         "url": "/api/projects/{project_id}/summary"
+      },
+      "examples": {
+        "curl": "curl -sS -X GET \"${BASE_URL}/api/projects/${PROJECT_ID}/summary?include_risk=${INCLUDE_RISK}\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/projects/{project_id}/summary\", params={\"include_risk\": include_risk}, headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
       }
     },
     {
@@ -32,6 +44,10 @@
       "api": {
         "method": "GET",
         "url": "/api/projects/{project_id}/tasks"
+      },
+      "examples": {
+        "curl": "curl -sS -X GET \"${BASE_URL}/api/projects/${PROJECT_ID}/tasks?status=${STATUS}\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/projects/{project_id}/tasks\", params={\"status\": status}, headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
       }
     }
   ]
