@@ -1,0 +1,39 @@
+{
+  "toolset": "data_collection_search",
+  "description": "数据收集项目检索相关能力，支持搜索、筛选和统计。",
+  "tools": [
+    {
+      "name": "search_collected_records",
+      "description": "按条件搜索已收集的数据记录。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": { "type": "string", "description": "数据项目编号" },
+          "filters": { "type": "object", "description": "查询参数，例如 region, status, tags" },
+          "limit": { "type": "integer", "default": 50 }
+        },
+        "required": ["project_id"]
+      },
+      "api": {
+        "method": "POST",
+        "url": "/api/projects/{project_id}/search"
+      }
+    },
+    {
+      "name": "summarize_records",
+      "description": "按字段汇总数据，输出数量和占比。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": { "type": "string", "description": "数据项目编号" },
+          "group_by": { "type": "array", "items": { "type": "string" }, "description": "按字段分组" }
+        },
+        "required": ["project_id", "group_by"]
+      },
+      "api": {
+        "method": "POST",
+        "url": "/api/projects/{project_id}/summary"
+      }
+    }
+  ]
+}

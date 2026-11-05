@@ -1,0 +1,38 @@
+{
+  "toolset": "project_progress_management",
+  "description": "项目进度管理相关能力，用于读取进度和总结事项。",
+  "tools": [
+    {
+      "name": "get_project_summary",
+      "description": "获取项目整体状态和完成进度。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": { "type": "string", "description": "项目编号" },
+          "include_risk": { "type": "boolean", "default": true }
+        },
+        "required": ["project_id"]
+      },
+      "api": {
+        "method": "GET",
+        "url": "/api/projects/{project_id}/summary"
+      }
+    },
+    {
+      "name": "list_task_status",
+      "description": "列出项目各任务的状态和负责人。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": { "type": "string", "description": "项目编号" },
+          "status": { "type": "string", "description": "筛选状态，例如 done, in_progress, blocked" }
+        },
+        "required": ["project_id"]
+      },
+      "api": {
+        "method": "GET",
+        "url": "/api/projects/{project_id}/tasks"
+      }
+    }
+  ]
+}

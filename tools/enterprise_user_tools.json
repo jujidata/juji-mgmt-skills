@@ -1,0 +1,40 @@
+{
+  "toolset": "enterprise_user_management",
+  "description": "企业用户管理相关能力，适合查询和维护企业成员信息。",
+  "tools": [
+    {
+      "name": "list_enterprise_users",
+      "description": "查询企业下的用户列表，支持按状态和分页筛选。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "enterprise_id": { "type": "string", "description": "企业标识" },
+          "status": { "type": "string", "description": "用户状态，例如 active, disabled, pending" },
+          "page": { "type": "integer", "default": 1 },
+          "page_size": { "type": "integer", "default": 20 }
+        },
+        "required": ["enterprise_id"]
+      },
+      "api": {
+        "method": "GET",
+        "url": "/api/enterprise/{enterprise_id}/users"
+      }
+    },
+    {
+      "name": "get_user_profile",
+      "description": "获取单个用户的详细信息。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "enterprise_id": { "type": "string", "description": "企业标识" },
+          "user_id": { "type": "string", "description": "用户编号" }
+        },
+        "required": ["enterprise_id", "user_id"]
+      },
+      "api": {
+        "method": "GET",
+        "url": "/api/enterprise/{enterprise_id}/users/{user_id}"
+      }
+    }
+  ]
+}
