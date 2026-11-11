@@ -1,67 +1,79 @@
 # API 配置与调用说明
 
-在使用 `tools/` 下的能力前，必须先配置正确的 `api-config.json`。  
-`tools/` 里的调用方式是 **curl 命令** 或 **Python requests**，不是 MCP。
+使用 `tools/` 中的任何能力前，必须先配置并验证 `api-config.json`。调用方式是 **curl** 或 **Python requests**，不是 MCP。
 
-## 1) 配置文件
+## 1. 配置文件
 
-1. 复制 `api-config.example.json` 为 `api-config.json`
-2. 填写实际 `api_key`
-3. `base_url` 默认使用 `https://jujidata.com`
+复制样例并填入创建时仅显示一次的完整 API Key：
 
-示例：
+```bash
+cp api-config.example.json api-config.json
+```
 
 ```json
 {
-  "api_key": "YOUR_REAL_API_KEY",
+  "api_key": "juji_sk_完整APIKey",
   "base_url": "https://jujidata.com"
 }
 ```
 
-## 2) API Key 获取方式
+`api-config.json` 已被 `.gitignore` 忽略。不要提交、打印或在对话回复中展示完整 Key。
 
-1. 登录：https://jujidata.com/login  
-2. 进入密钥管理页生成 Key：https://jujidata.com/users/key-mgmt
+## 2. API Key 获取与生命周期
 
-## 3) 调用约定
+1. 使用当前企业的 Admin 或 Super Admin 登录据吉平台。
+2. 通过平台提供的 API Key 管理能力创建 Key；对应后端管理接口需要正常登录 JWT，不属于本 Skill。
+3. 创建响应中的完整 Key 只返回一次，应立即交付到安全的密钥配置中。
 
-- 请求头统一使用：`Authorization: Bearer <api_key>`
-- `Content-Type: application/json`
-- 工具里的相对路径（如 `/api/projects/{project_id}/summary`）需要拼接到 `base_url`
+Key 默认有效期为 14 天，可由同一企业的管理员撤销。用户的企业管理员 Membership 失效后，绑定的 Key 也会立即失效。Skill 只消费已有 Key，不调用使用登录 JWT 的 Key 创建、列表或撤销接口。
 
-## 4) 快速验证
+## 3. 调用约定
 
-### curl 示例
+- 默认 Base URL：`https://jujidata.com`
+- 开放 API 前缀：`/api/open-api/v1`
+- 认证请求头：`X-API-Key: <api_key>`
+- 只使用 GET 请求。
+- 认证只使用 `X-API-Key` 请求头。
+- 不要把 `enterprise_id`、`user_id` 或 `membership_id` 作为客户端权限参数；服务端从 Key 恢复可信身份。
+
+## 4. 快速验证
+
+### curl
 
 ```bash
 API_KEY=$(jq -r '.api_key' api-config.json)
 BASE_URL=$(jq -r '.base_url // "https://jujidata.com"' api-config.json)
 
-curl -sS -X GET \
-  "${BASE_URL}/api/projects/demo-project/summary" \
-  -H "Authorization: Bearer ${API_KEY}" \
-  -H "Content-Type: application/json"
+curl --fail-with-body -sS \
+  "${BASE_URL}/api/open-api/v1/me" \
+  -H "X-API-Key: ${API_KEY}" \
+  -H "Accept: application/json"
 ```
 
-### Python requests 示例
+成功响应包含 `auth_type`、`credential_id`、`user_id`、`membership_id`、`enterprise_id`、`scopes` 和 `expires_at`。除非用户明确需要，不要在最终回复中暴露这些内部标识。
+
+### Python requests
 
 ```python
 import json
 import requests
 
-with open("api-config.json", "r", encoding="utf-8") as f:
-    cfg = json.load(f)
+with open("api-config.json", "r", encoding="utf-8") as file:
+    config = json.load(file)
 
-base_url = cfg.get("base_url") or "https://jujidata.com"
-api_key = cfg["api_key"]
-
-resp = requests.get(
-    f"{base_url}/api/projects/demo-project/summary",
-    headers={
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    },
+base_url = (config.get("base_url") or "https://jujidata.com").rstrip("/")
+response = requests.get(
+    f"{base_url}/api/open-api/v1/me",
+    headers={"X-API-Key": config["api_key"], "Accept": "application/json"},
     timeout=30,
 )
-print(resp.status_code, resp.text)
+response.raise_for_status()
+print(response.json())
 ```
+
+## 5. 错误处理
+
+- `400`：查询参数或项目 ID 格式错误；修正输入，不要盲目重试。
+- `401`：Key 缺失、格式错误、摘要不匹配、已过期、已撤销，或绑定的企业身份已失效。停止调用并请用户更新配置。
+- `404`：资源不存在或当前身份无权访问；不要据此判断项目 ID 是否真实存在。
+- `5xx`：服务端异常；保留状态码和不含 Key 的错误摘要，有限次数重试后停止。

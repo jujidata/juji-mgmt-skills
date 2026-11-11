@@ -1,54 +1,43 @@
 {
-  "toolset": "data_collection_search",
-  "description": "数据收集项目检索相关能力，支持搜索、筛选和统计。",
+  "toolset": "open_api_identity",
+  "description": "验证据吉 API Key，并读取服务端从 Key 恢复出的可信身份。当前不提供采集记录搜索能力。",
   "execution": {
     "mode": "http",
     "client": ["curl", "python-requests"],
     "not_via": "mcp",
     "config_file": "api-config.json",
     "default_base_url": "https://jujidata.com",
-    "auth_header": "Authorization: Bearer <api_key>"
+    "auth_header": "X-API-Key: <api_key>"
   },
   "tools": [
     {
-      "name": "search_collected_records",
-      "description": "按条件搜索已收集的数据记录。",
+      "name": "verify_api_key",
+      "description": "验证 API Key，并返回其绑定的用户、Membership、企业、Scope 和过期时间。",
       "input_schema": {
         "type": "object",
-        "properties": {
-          "project_id": { "type": "string", "description": "数据项目编号" },
-          "filters": { "type": "object", "description": "查询参数，例如 region, status, tags" },
-          "limit": { "type": "integer", "default": 50 }
-        },
-        "required": ["project_id"]
+        "properties": {},
+        "additionalProperties": false
       },
       "api": {
-        "method": "POST",
-        "url": "/api/projects/{project_id}/search"
+        "method": "GET",
+        "url": "/api/open-api/v1/me"
       },
-      "examples": {
-        "curl": "curl -sS -X POST \"${BASE_URL}/api/projects/${PROJECT_ID}/search\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\" -d '{\"filters\": {\"region\": \"东区\"}, \"limit\": 50}'",
-        "python_requests": "requests.post(f\"{base_url}/api/projects/{project_id}/search\", json={\"filters\": filters, \"limit\": limit}, headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
-      }
-    },
-    {
-      "name": "summarize_records",
-      "description": "按字段汇总数据，输出数量和占比。",
-      "input_schema": {
+      "response_schema": {
         "type": "object",
         "properties": {
-          "project_id": { "type": "string", "description": "数据项目编号" },
-          "group_by": { "type": "array", "items": { "type": "string" }, "description": "按字段分组" }
+          "auth_type": { "type": "string", "const": "api_key" },
+          "credential_id": { "type": "string" },
+          "user_id": { "type": "integer" },
+          "membership_id": { "type": "integer" },
+          "enterprise_id": { "type": "integer" },
+          "scopes": { "type": "array", "items": { "type": "string" } },
+          "expires_at": { "type": "string", "format": "date-time" }
         },
-        "required": ["project_id", "group_by"]
-      },
-      "api": {
-        "method": "POST",
-        "url": "/api/projects/{project_id}/summary"
+        "required": ["auth_type", "credential_id", "user_id", "membership_id", "enterprise_id", "scopes", "expires_at"]
       },
       "examples": {
-        "curl": "curl -sS -X POST \"${BASE_URL}/api/projects/${PROJECT_ID}/summary\" -H \"Authorization: Bearer ${API_KEY}\" -H \"Content-Type: application/json\" -d '{\"group_by\": [\"status\", \"region\"]}'",
-        "python_requests": "requests.post(f\"{base_url}/api/projects/{project_id}/summary\", json={\"group_by\": group_by}, headers={\"Authorization\": f\"Bearer {api_key}\", \"Content-Type\": \"application/json\"}, timeout=30)"
+        "curl": "curl --fail-with-body -sS \"${BASE_URL}/api/open-api/v1/me\" -H \"X-API-Key: ${API_KEY}\" -H \"Accept: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/open-api/v1/me\", headers={\"X-API-Key\": api_key, \"Accept\": \"application/json\"}, timeout=30)"
       }
     }
   ]
