@@ -1,23 +1,61 @@
-# 项目进度展示流程
+# 项目查询与进度展示
 
-## 目标
+## 可用能力
 
-用于跟踪项目执行状态，并根据实际进度输出简洁的汇报内容。
+- 分页查询当前 API Key 身份有权访问的项目。
+- 查询单个项目的安全字段。
+- 查询单个项目的聚合任务统计和完成率。
 
-## 典型步骤
+服务端会同时使用 API Key 绑定的用户和企业做权限过滤。Skill 不传入企业 ID，也不能通过遍历项目 ID 扩大访问范围。
 
-1. 获取项目基础信息，包括名称、负责人、截止日期和当前阶段。
-2. 收集各项任务的完成状态、待办项和风险事项。
-3. 对任务状态做分类：已完成、进行中、延期、阻塞。
-4. 计算完成率和关键里程碑达成情况。
-5. 汇总成中文进度说明，并展示图表或简报。
+## 项目列表
 
-## 输出建议
+调用：
 
-- 项目总览：当前阶段、完成进度、风险说明。
-- 关键事项：本周完成、下一步计划、需要协作的点。
-- 数据展示：使用脚本输出柱状图、折线图或进度仪表盘。
+```text
+GET /api/open-api/v1/projects?page=1&page_size=20
+```
 
-## 适用场景
+约束：
 
-适用于项目管理、客户实施、运营推进和内部协同场景。 
+- `page` 从 1 开始，默认 1。
+- `page_size` 默认 20，最大 100。
+- 响应通过 `has_more` 表示是否继续请求下一页。
+- 用户要求“全部项目”时逐页读取，直到 `has_more=false`；设置合理上限并避免无界请求。
+
+每个项目只包含 `id`、`title`、`description`、`is_published`、`is_draft`、`job_status`、`created_at` 和 `updated_at`。
+
+## 项目详情
+
+调用：
+
+```text
+GET /api/open-api/v1/projects/{projectId}
+```
+
+`projectId` 必须是正整数。不存在和无权限统一返回 404，不要向用户断言是哪一种情况。
+
+## 项目统计
+
+调用：
+
+```text
+GET /api/open-api/v1/projects/{projectId}/statistics
+```
+
+响应字段：
+
+- `total_tasks`：任务总数。
+- `completed_tasks`：已完成任务数。
+- `pending_review_tasks`：待审核任务数。
+- `tasks_with_annotations`：已有标注的任务数。
+- `skipped_annotations`：跳过的标注数。
+- `completion_rate`：0 到 1 的完成率；任务总数为 0 时为 0。
+
+## 汇报流程
+
+1. 用户只给项目名称时，先分页查询项目并匹配；同名时列出候选 ID 请求确认。
+2. 获取项目详情和统计数据。
+3. 使用 `scripts/data_summary.py --kind project-statistics` 生成结构化摘要，或直接将 `completion_rate` 转成百分比。
+4. 用户明确需要图表时，使用 `scripts/chart_visualization.py --kind project-statistics`。
+5. 只根据返回的聚合指标描述进度，不推断负责人、截止日期、风险或任务明细。
