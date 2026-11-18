@@ -12,13 +12,15 @@
   "tools": [
     {
       "name": "list_projects",
-      "description": "分页查询 API Key 身份有权查看的项目。",
+      "description": "按必填的项目类型分页查询 API Key 身份有权查看的项目。",
       "input_schema": {
         "type": "object",
         "properties": {
+          "project_type": { "type": "string", "enum": ["annotation", "collection"], "description": "必填，annotation 为标注项目，collection 为采集项目" },
           "page": { "type": "integer", "minimum": 1, "default": 1 },
           "page_size": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
         },
+        "required": ["project_type"],
         "additionalProperties": false
       },
       "api": {
@@ -36,8 +38,8 @@
         "required": ["items", "page", "page_size", "has_more"]
       },
       "examples": {
-        "curl": "curl --fail-with-body -sS \"${BASE_URL}/api/open-api/v1/projects?page=${PAGE}&page_size=${PAGE_SIZE}\" -H \"X-API-Key: ${API_KEY}\" -H \"Accept: application/json\"",
-        "python_requests": "requests.get(f\"{base_url}/api/open-api/v1/projects\", params={\"page\": page, \"page_size\": page_size}, headers={\"X-API-Key\": api_key, \"Accept\": \"application/json\"}, timeout=30)"
+        "curl": "curl --fail-with-body -sS \"${BASE_URL}/api/open-api/v1/projects?project_type=${PROJECT_TYPE}&page=${PAGE}&page_size=${PAGE_SIZE}\" -H \"X-API-Key: ${API_KEY}\" -H \"Accept: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/open-api/v1/projects\", params={\"project_type\": project_type, \"page\": page, \"page_size\": page_size}, headers={\"X-API-Key\": api_key, \"Accept\": \"application/json\"}, timeout=30)"
       }
     },
     {
@@ -102,13 +104,13 @@
         "id": { "type": "integer" },
         "title": { "type": ["string", "null"] },
         "description": { "type": ["string", "null"] },
-        "is_published": { "type": "boolean" },
-        "is_draft": { "type": "boolean" },
-        "job_status": { "type": ["string", "null"] },
+        "project_type": { "type": "string", "enum": ["annotation", "collection"], "description": "annotation 为标注项目，collection 为采集项目" },
+        "job_type": { "type": ["string", "null"], "enum": ["SELF_ANNOTATION", "OUTSOURCE", null], "description": "标注项目模式：SELF_ANNOTATION 为自标，OUTSOURCE 为外包；采集项目或未关联作业时为 null" },
+        "job_status": { "type": ["string", "null"], "description": "作业状态原始值；in-process 表示进行中，aborted 表示已中止，null 表示未提供状态；其他值保留原值，不猜测翻译" },
         "created_at": { "type": ["string", "null"], "format": "date-time" },
         "updated_at": { "type": ["string", "null"], "format": "date-time" }
       },
-      "required": ["id", "title", "description", "is_published", "is_draft", "job_status", "created_at", "updated_at"]
+      "required": ["id", "title", "description", "project_type", "job_type", "job_status", "created_at", "updated_at"]
     }
   }
 }

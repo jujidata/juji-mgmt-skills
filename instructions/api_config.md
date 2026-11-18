@@ -36,6 +36,10 @@ Key 默认有效期为 14 天，可由同一企业的管理员撤销。用户的
 - 认证只使用 `X-API-Key` 请求头。
 - 不要把 `enterprise_id`、`user_id` 或 `membership_id` 作为客户端权限参数；服务端从 Key 恢复可信身份。
 
+### 本地测试环境（自签名证书）
+
+当 `api-config.json` 中 `insecure_skip_verify` 为 `true` 时，表示正在连接本地部署的测试服务（通常使用自签名证书）。此时所有 curl 调用需附加 `-k`（即 `--insecure`），Python requests 调用需附加 `verify=False`，否则会因证书校验失败而返回 HTTP 000。该开关仅用于本地开发测试；正式环境必须移除该字段或设为 `false`，保持默认严格校验。
+
 ## 4. 快速验证
 
 ### curl

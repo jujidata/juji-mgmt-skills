@@ -51,14 +51,16 @@ def summarize_enterprise_users(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def summarize_project_statistics(payload: Mapping[str, Any]) -> dict[str, Any]:
+def summarize_project_statistics(
+    payload: Mapping[str, Any], project_type: str
+) -> dict[str, Any]:
     """汇总 /projects/{projectId}/statistics 响应。"""
+    if project_type not in {"annotation", "collection"}:
+        raise ValueError("project_type 必须是 annotation 或 collection")
+
     project_id = _non_negative_int(payload, "project_id")
     total_tasks = _non_negative_int(payload, "total_tasks")
     completed_tasks = _non_negative_int(payload, "completed_tasks")
-    pending_review_tasks = _non_negative_int(payload, "pending_review_tasks")
-    tasks_with_annotations = _non_negative_int(payload, "tasks_with_annotations")
-    skipped_annotations = _non_negative_int(payload, "skipped_annotations")
 
     completion_rate = payload.get("completion_rate")
     if isinstance(completion_rate, bool) or not isinstance(completion_rate, (int, float)):
@@ -67,6 +69,23 @@ def summarize_project_statistics(payload: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("completion_rate 必须是 0 到 1 之间的数字")
 
     completion_percentage = round(float(completion_rate) * 100, 2)
+    if project_type == "collection":
+        return {
+            "project_id": project_id,
+            "project_type": project_type,
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "completion_rate": float(completion_rate),
+            "completion_percentage": completion_percentage,
+            "summary": (
+                f"项目 {project_id} 共 {total_tasks} 次采集，已提交 {completed_tasks} 次，"
+                f"提交率 {completion_percentage:.2f}%。"
+            ),
+        }
+
+    pending_review_tasks = _non_negative_int(payload, "pending_review_tasks")
+    tasks_with_annotations = _non_negative_int(payload, "tasks_with_annotations")
+    skipped_annotations = _non_negative_int(payload, "skipped_annotations")
     return {
         "project_id": project_id,
         "total_tasks": total_tasks,
@@ -102,14 +121,22 @@ def main() -> int:
         choices=("enterprise-users", "project-statistics"),
         help="API 响应类型",
     )
+    parser.add_argument(
+        "--project-type",
+        choices=("annotation", "collection"),
+        help="项目类型；汇总项目统计时必填",
+    )
     parser.add_argument("--input", default="-", help="JSON 文件路径；默认从标准输入读取")
     args = parser.parse_args()
+
+    if args.kind == "project-statistics" and args.project_type is None:
+        parser.error("--kind project-statistics 时必须提供 --project-type")
 
     payload = _load_json(args.input)
     if args.kind == "enterprise-users":
         result = summarize_enterprise_users(payload)
     else:
-        result = summarize_project_statistics(payload)
+        result = summarize_project_statistics(payload, args.project_type)
     json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
     sys.stdout.write("\n")
     return 0
