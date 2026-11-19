@@ -1,0 +1,158 @@
+{
+  "toolset": "employee_work_statistics",
+  "description": "列出 API Key 身份可查看工作统计的其他员工及其姓名和企业角色，并按员工 ID 查询聚合工作量。",
+  "execution": {
+    "mode": "http",
+    "client": ["curl", "python-requests"],
+    "not_via": "mcp",
+    "config_file": "api-config.json",
+    "default_base_url": "https://jujidata.com",
+    "auth_header": "X-API-Key: <api_key>"
+  },
+  "tools": [
+    {
+      "name": "list_managed_work_statistics_users",
+      "description": "分页查询 API Key 身份可查看工作统计的其他员工，可用姓名与展示名称匹配目标员工。只要 has_more 为 true 就继续翻页，当前页可能为空。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer", "minimum": 1, "maximum": 2147483647, "default": 1 },
+          "page_size": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
+        },
+        "additionalProperties": false
+      },
+      "api": {
+        "method": "GET",
+        "url": "/api/open-api/v1/work-statistics/managed-users"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "employee_id": { "type": "integer", "minimum": 1 },
+                "display_name": { "type": ["string", "null"], "description": "优先使用当前企业的账号名，缺少可展示名称时为空" },
+                "full_name": { "type": ["string", "null"], "description": "员工填写的姓与名，未填写时为空" },
+                "role": { "type": "string", "description": "员工在当前企业的角色，可用于区分重名员工" }
+              },
+              "required": ["employee_id", "display_name", "full_name", "role"],
+              "additionalProperties": false
+            }
+          },
+          "has_more": { "type": "boolean" }
+        },
+        "required": ["items", "has_more"],
+        "additionalProperties": false
+      },
+      "examples": {
+        "curl": "curl --fail-with-body -sS \"${BASE_URL}/api/open-api/v1/work-statistics/managed-users?page=${PAGE}&page_size=${PAGE_SIZE}\" -H \"X-API-Key: ${API_KEY}\" -H \"Accept: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/open-api/v1/work-statistics/managed-users\", params={\"page\": page, \"page_size\": page_size}, headers={\"X-API-Key\": api_key, \"Accept\": \"application/json\"}, timeout=30)"
+      }
+    },
+    {
+      "name": "get_employee_work_statistics",
+      "description": "按员工用户 ID 查询标注、审核、打回和采集工作量，可按上海自然日和项目筛选。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "target_user_id": { "type": "integer", "minimum": 1, "maximum": 2147483647, "description": "路径参数，目标员工的用户 ID" },
+          "start_date": { "type": "string", "format": "date", "description": "包含当天，须与 end_date 同时提供" },
+          "end_date": { "type": "string", "format": "date", "description": "包含当天，须与 start_date 同时提供，最多查询 31 个自然日" },
+          "project_id": { "type": "integer", "minimum": 1, "maximum": 2147483647, "description": "授权项目 ID，省略时覆盖该员工的全部授权项目" }
+        },
+        "required": ["target_user_id"],
+        "dependentRequired": { "start_date": ["end_date"], "end_date": ["start_date"] },
+        "additionalProperties": false
+      },
+      "api": {
+        "method": "GET",
+        "url": "/api/open-api/v1/work-statistics/users/{target_user_id}"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "employee_id": { "type": "integer", "minimum": 1 },
+          "range": {
+            "type": "object",
+            "properties": {
+              "start_date": { "type": "string", "format": "date" },
+              "end_date": { "type": "string", "format": "date" },
+              "timezone": { "const": "Asia/Shanghai" }
+            },
+            "required": ["start_date", "end_date", "timezone"]
+          },
+          "summary": {
+            "allOf": [
+              { "$ref": "#/definitions/counts" },
+              {
+                "type": "object",
+                "properties": { "productive_days": { "type": "integer", "minimum": 0 } },
+                "required": ["productive_days"]
+              }
+            ]
+          },
+          "daily": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": { "type": "string", "format": "date" },
+                "projects": { "type": "array", "items": { "$ref": "#/definitions/project_counts" } }
+              },
+              "required": ["date", "projects"]
+            }
+          },
+          "project_distribution": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                { "$ref": "#/definitions/project_counts" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": ["string", "null"] },
+                    "status": { "type": ["string", "null"] },
+                    "project_type": { "type": "string", "enum": ["annotation", "collection"] },
+                    "total": { "type": "integer", "minimum": 0, "description": "四类指标之和" }
+                  },
+                  "required": ["title", "status", "project_type", "total"]
+                }
+              ]
+            }
+          }
+        },
+        "required": ["employee_id", "range", "summary", "daily", "project_distribution"],
+        "additionalProperties": false
+      },
+      "examples": {
+        "curl": "curl --fail-with-body -sS \"${BASE_URL}/api/open-api/v1/work-statistics/users/${TARGET_USER_ID}\" -H \"X-API-Key: ${API_KEY}\" -H \"Accept: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/open-api/v1/work-statistics/users/{target_user_id}\", params={\"start_date\": start_date, \"end_date\": end_date, \"project_id\": project_id}, headers={\"X-API-Key\": api_key, \"Accept\": \"application/json\"}, timeout=30)"
+      }
+    }
+  ],
+  "definitions": {
+    "counts": {
+      "type": "object",
+      "properties": {
+        "annotated": { "type": "integer", "minimum": 0 },
+        "reviewed": { "type": "integer", "minimum": 0, "description": "审核数，包含打回" },
+        "returned": { "type": "integer", "minimum": 0 },
+        "collected": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["annotated", "reviewed", "returned", "collected"]
+    },
+    "project_counts": {
+      "allOf": [
+        { "$ref": "#/definitions/counts" },
+        {
+          "type": "object",
+          "properties": { "project_id": { "type": "integer", "minimum": 1 } },
+          "required": ["project_id"]
+        }
+      ]
+    }
+  }
+}
