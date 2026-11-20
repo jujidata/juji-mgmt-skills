@@ -40,6 +40,26 @@
 - 趋势使用 `daily` 中每天按项目拆分的计数，项目对比使用 `project_distribution`。报告注明实际统计区间和已选的项目筛选条件。
 - `200` 响应中的零计数或空项目分布表示当前查询范围内无对应产出或项目数据。
 
+## 项目工作统计图
+
+图表按天展示所管理员工的标注、审核、打回和采集数量，默认使用分组柱状图。用户指定折线图时使用折线图，同时要求两种时用同一份数据分别绘制。指定其他图表类型时，提示目前只支持柱状图和折线图，请用户选择。审核数包含打回，四项指标独立展示。
+
+1. 读取 `tools/project_management_tools.json` 和 `tools/work_statistics_tools.json`。单个项目按 ID 使用 `get_project` 确认，按名称使用 `list_projects` 分页查找并精确匹配项目标题。匹配前按 NFKC 规范化、去除首尾空白并忽略英文字母大小写。列表查完后仍无匹配时提示核对名称或 ID，重名时列出项目类型和 ID 请用户选择。
+2. 权限内全部项目通过 `list_projects` 分别读取 `annotation` 和 `collection` 全部分页，按项目 ID 去重。按天将这些项目的四项统计分别加总。明确要求逐项目绘图时，复用查询结果，分别按单项目 ID 绘制。项目列表未查完时说明实际范围。没有可见项目时说明情况。
+3. 按「查询员工名单」取得完整名单。对每个不同的员工 ID 查询一次 `get_employee_work_statistics`，传入相同的日期范围并省略 `project_id`。这样能在同一份响应中取得该员工的所有授权项目，由绘图脚本按所选项目 ID 过滤，单项目也无需逐个尝试员工与项目的权限组合。沿用最近 7 个上海自然日的默认范围，最多 31 天。
+4. 将成功响应原样放入 `employees`，使脚本直接用 `daily[].projects` 计算每日计数。名单为空、无成功响应，或成功响应均未覆盖所选项目时，说明没有可用的项目工作统计数据。个别员工查询失败时记录在 `failed_employee_count`，说明图表只覆盖成功查询的员工。可见但未出现在每日数据中的项目不计入实际覆盖范围，说明未覆盖的项目，避免将缺失统计当作零产出。
+
+脚本接收一个 JSON 对象，包含 `range`（与员工响应的日期及 `Asia/Shanghai` 时区一致）、`project_ids`（单项目为一个 ID，全部项目为去重后的可见项目 ID）、`employees`（成功的完整员工统计响应数组）及可选的 `failed_employee_count`（查询失败的员工数）。在 Skill 目录中运行，绘图需要 Matplotlib 和支持中文的系统字体（如 Noto Sans CJK SC）。
+
+```bash
+python3 scripts/chart_visualization.py --kind project-work-statistics \
+  --input project-work.json --output project-work-bar.png --title '项目名称（ID 123）工作统计'
+python3 scripts/chart_visualization.py --kind project-work-statistics --chart-type line \
+  --input project-work.json --output project-work-line.png --title '可见项目工作统计汇总'
+```
+
+按实际项目范围设置标题，同时输出两种图时使用两个输出文件。回复中包含图片、日期范围和权限覆盖说明。项目任务进度快照按 `project_progress.md` 处理。
+
 ## 错误处理
 
 - `400` 检查员工 ID、项目 ID、日期格式和日期范围。
