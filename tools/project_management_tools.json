@@ -65,7 +65,7 @@
     },
     {
       "name": "get_project_statistics",
-      "description": "查询单个可见项目的任务聚合统计和完成率。",
+      "description": "查询单个可见项目的任务聚合统计和完成率。采集项目还可返回人脸去重累计扣费次数。",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -87,6 +87,7 @@
           "pending_review_tasks": { "type": "integer", "minimum": 0 },
           "tasks_with_annotations": { "type": "integer", "minimum": 0 },
           "skipped_annotations": { "type": "integer", "minimum": 0 },
+          "used_dedup_face_quota": { "type": ["integer", "null"], "minimum": 0, "description": "采集项目中可追溯的累计人脸去重扣费次数。非采集项目返回 null，旧版服务可能不返回此字段。" },
           "completion_rate": { "type": "number", "minimum": 0, "maximum": 1 }
         },
         "required": ["project_id", "total_tasks", "completed_tasks", "pending_review_tasks", "tasks_with_annotations", "skipped_annotations", "completion_rate"]

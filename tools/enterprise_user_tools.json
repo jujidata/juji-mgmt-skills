@@ -1,6 +1,6 @@
 {
   "toolset": "enterprise_summary",
-  "description": "查询 API Key 绑定企业的最小信息和成员角色聚合。",
+  "description": "查询 API Key 绑定企业的最小信息、成员角色聚合和人脸去重额度。",
   "execution": {
     "mode": "http",
     "client": ["curl", "python-requests"],
@@ -61,6 +61,32 @@
       "examples": {
         "curl": "curl --fail-with-body -sS \"${BASE_URL}/api/open-api/v1/enterprise/users/summary\" -H \"X-API-Key: ${API_KEY}\" -H \"Accept: application/json\"",
         "python_requests": "requests.get(f\"{base_url}/api/open-api/v1/enterprise/users/summary\", headers={\"X-API-Key\": api_key, \"Accept\": \"application/json\"}, timeout=30)"
+      }
+    },
+    {
+      "name": "get_enterprise_face_dedup_quota",
+      "description": "查询 API Key 绑定企业的人脸去重总额度、已用额度和剩余额度。",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "api": {
+        "method": "GET",
+        "url": "/api/open-api/v1/enterprise/face-dedup-quota"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "total_dedup_face_quota": { "type": "integer" },
+          "used_dedup_face_quota": { "type": "integer" },
+          "remaining_dedup_face_quota": { "type": "integer" }
+        },
+        "required": ["total_dedup_face_quota", "used_dedup_face_quota", "remaining_dedup_face_quota"]
+      },
+      "examples": {
+        "curl": "curl --fail-with-body -sS \"${BASE_URL}/api/open-api/v1/enterprise/face-dedup-quota\" -H \"X-API-Key: ${API_KEY}\" -H \"Accept: application/json\"",
+        "python_requests": "requests.get(f\"{base_url}/api/open-api/v1/enterprise/face-dedup-quota\", headers={\"X-API-Key\": api_key, \"Accept\": \"application/json\"}, timeout=30)"
       }
     }
   ]

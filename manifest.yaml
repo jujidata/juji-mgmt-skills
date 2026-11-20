@@ -1,6 +1,6 @@
 name: juji-mgmt-skills
-version: 0.5.0
-description: 通过据吉只读开放 API 查询企业概览、成员角色汇总、项目进度与所管理员工的工作统计，支持按姓名查询个人工作量。
+version: 0.6.0
+description: 通过据吉只读开放 API 查询企业概览、成员角色汇总、项目进度、采集项目人脸去重用量、企业人脸去重剩余额度与所管理员工的工作统计。
 author: jujidata
 language: zh-CN
 category: business-management
@@ -9,6 +9,7 @@ tags:
   - 项目查询
   - 项目进度
   - 工作统计
+  - 人脸去重额度
   - API-Key
   - 可视化
 entrypoints:
