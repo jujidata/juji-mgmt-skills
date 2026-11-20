@@ -1,13 +1,13 @@
 ---
 name: juji-mgmt-skills
-description: 使用据吉 API Key 查询企业、成员角色汇总、项目进度和所管理员工的工作统计，生成中文业务摘要或图表。支持展示各员工姓名及工作量、按姓名或员工 ID 查个人工作量，重名时请用户选择。
+description: 使用据吉 API Key 查询企业、成员角色汇总、项目进度、采集项目人脸去重用量、企业人脸去重剩余额度和所管理员工的工作统计，生成中文业务摘要或图表。支持按姓名或员工 ID 查个人工作量，重名时请用户选择。
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # 据吉企业管理技能
 
-使用本 Skill 通过据吉开放 API 查询企业、项目及员工工作统计。服务端根据 API Key 绑定的用户、Membership 和企业确定数据范围。
+使用本 Skill 通过据吉开放 API 查询企业、项目、人脸去重额度及员工工作统计。服务端根据 API Key 绑定的用户、Membership 和企业确定数据范围。
 
 ## 使用前检查
 
@@ -20,13 +20,14 @@ metadata:
 
 - 企业名称、企业 ID 或成员角色数量：读取 `instructions/enterprise_user_management.md` 和 `tools/enterprise_user_tools.json`。
 - 项目列表、项目详情或项目完成进度：读取 `instructions/project_progress.md` 和 `tools/project_management_tools.json`。
+- 采集项目人脸去重用量或企业人脸去重剩余额度：读取 `instructions/face_dedup_quota.md`，复用 `tools/project_management_tools.json` 的项目工具和 `tools/enterprise_user_tools.json` 的企业额度工具。
 - 员工的标注、审核、打回或采集工作量：读取 `instructions/work_statistics.md` 和 `tools/work_statistics_tools.json`。查询各员工或按姓名查询个人时，先读取当前 Key 可查看统计的员工名单。
 - 用户询问采集记录、任务明细或数据搜索：读取 `instructions/data_collection_search.md`，明确当前能力边界，并提供现有项目级统计作为可选替代。
 - 企业角色汇总或项目进度需要中文结构化摘要或图表时，使用 `scripts/data_summary.py` 或 `scripts/chart_visualization.py` 处理相应的 API 响应。
 
 ## 标准工作流
 
-1. 明确用户需要企业汇总、项目查询、项目进度还是员工工作统计。
+1. 根据问题选择对应场景。
 2. 从 `api-config.json` 读取 `base_url` 和 `api_key`；默认 `base_url` 为 `https://jujidata.com`。
 3. 使用 `X-API-Key` 请求头调用对应只读接口。
 4. 按服务端权限结果回答。项目或员工工作统计返回 404 时，告知资源不存在或当前身份无权访问。
